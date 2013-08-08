@@ -1,0 +1,3 @@
+[submodule "openvswitch"]
+	path = openvswitch
+	url = git@github.com:takayuki/openvswitch.git
