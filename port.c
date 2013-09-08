@@ -33,6 +33,10 @@ static int parse_pair(struct port *port, char *key, char *value)
 		if (value == 0 || *value == 0)
 			return -1;
 		port->opt.link.addr = value;
+	} else if (!strcmp(key,"mac")) {
+		if (value == 0 || *value == 0)
+			return -1;
+		port->opt.link.mac = value;
 	} else if (!strcmp(key,"src")) {
 		if (value == 0 || *value == 0)
 			return -1;

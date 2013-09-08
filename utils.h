@@ -18,6 +18,7 @@
 
 #include <linux/types.h>
 
+int eth_addr(char *, char*);
 __u32 ip4_addr(char *);
 int ip4_netmask(char *);
 void info(const char *, ...);

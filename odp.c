@@ -182,6 +182,7 @@ static int link_addr(struct rtnl *rtnl, struct port *port)
 static int link_up(struct rtnl *rtnl, struct port *port)
 {
 	struct rtnl_link_req req = {
+		.addr	 = port->opt.link.mac,
 		.change	 = IFF_UP,
 		.flags	 = IFF_UP,
 		.ifindex = port->opt.link.ifindex,

@@ -21,6 +21,12 @@
 #include <sys/socket.h>
 #include "utils.h"
 
+int eth_addr(char *addr, char *out) {
+	return sscanf(addr, "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx",
+		      &out[0], &out[1], &out[2], &out[3], &out[4], &out[5])
+		== 6;
+}
+
 __u32 __ip4_addr(char *addr) {
 	struct addrinfo hints;
 	struct addrinfo *res;

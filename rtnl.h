@@ -37,6 +37,7 @@ struct rtnl {
 };
 
 struct rtnl_link_req {
+	char		*addr;
 	int		 ifindex;
 	unsigned int	 change;
 	unsigned int	 flags;

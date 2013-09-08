@@ -185,6 +185,7 @@ static int link_set(struct buffer *buf, void *arg)
 {
 	struct rtnl_link_req *req = arg;
 	struct ifinfomsg ifm;
+	char addr[6];
 
 	memset(&ifm, 0, sizeof(ifm));
 	ifm.ifi_index = req->ifindex;
@@ -192,6 +193,8 @@ static int link_set(struct buffer *buf, void *arg)
 	ifm.ifi_flags = req->flags;
 	if (rtnl_put_ifinfomsg(buf, &ifm) < 0)
 		return -1;
+	if (req->addr && eth_addr(req->addr, addr))
+		nla_put_data(buf, addr, sizeof(addr), IFLA_ADDRESS);
 	return 0;
 }
 _RTNL_BUILDER(link_set, RTM_NEWLINK, NLM_F_ACK)

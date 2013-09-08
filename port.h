@@ -34,6 +34,7 @@ struct port {
 		} tun;
 		struct {
 			char	*addr;
+			char	*mac;
 			int	 ifindex;
 		} link;
 	} opt;
