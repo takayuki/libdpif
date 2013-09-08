@@ -42,7 +42,7 @@ struct odp *odp_init(struct odp *odp, int nl_mmap)
 	if (!packet_init(&odp->packet, small))
 		goto err_packet;
 
-	if (!rtnl_init(&odp->rtnl, medium))
+	if (!rtnl_init(&odp->rtnl, 0))
 		goto err_rtnl;
 
 	return odp;

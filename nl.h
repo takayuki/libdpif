@@ -83,6 +83,8 @@ struct nl;
 #define NL_SNDBUF_SIZE		(1024 * 1024 * 2)
 #define NL_RCVBUF_SIZE		(1024 * 1024 * 2)
 
+#define NL_MMAP_TEST_LOOP	20000000UL	/* ~10ms */
+
 struct nl_ring {
 	struct nl	*nl;
 	void		*addr;

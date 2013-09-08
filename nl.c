@@ -292,18 +292,26 @@ int nl_pollout(struct nl *nl, struct buffer *snd)
 
 int nl_pollin(struct nl *nl, struct buffer *rcv)
 {
-	volatile struct nl_mmap_hdr *hdr;
+	struct nl_mmap_hdr *hdr = rcv->memory->addr;
+	unsigned int nm_status;
+	unsigned long i;
 	int ret = 0;
 
-	for (hdr = rcv->memory->addr;
-	     (hdr->nm_status == NL_MMAP_STATUS_UNUSED ||
-	      hdr->nm_status == NL_MMAP_STATUS_RESERVED);
-	     hdr = rcv->memory->addr) {
-		ret = nl_poll(nl, POLLIN);
-		if (ret <= 0)
-			return ret;
+	if (!nl->nl_mmap)
+		return 0;
+
+	for (i = 0; ; i++) {
+		nm_status = __atomic_load_n(&hdr->nm_status, __ATOMIC_SEQ_CST);
+
+		if (nm_status >= NL_MMAP_STATUS_VALID)
+			return 0;
+
+		if (i > NL_MMAP_TEST_LOOP) {
+			ret = nl_poll(nl, POLLIN);
+			if (ret <= 0)
+				return ret;
+		}
 	}
-	return 0;
 }
 
 static const char *str_nm_status(unsigned int status)
