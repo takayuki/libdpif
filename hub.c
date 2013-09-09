@@ -41,14 +41,27 @@ void hub_exit(void)
 	struct port *port;
 
 	for (i = 0; i < OVS_VPORT_TYPE_MAX; i++) {
-		while (!LIST_EMPTY(&ports[i])) {
-			port = LIST_FIRST(&ports[i]);
-			LIST_REMOVE(port, next);
-			if (port != 0)
-				free(port);
+		LIST_FOREACH(port, &ports[i], next)
+			free(port);
+	}
+}
+
+static void compact_ports()
+{
+	int i, j;
+
+	for (i = OVS_VPORT_TYPE_UNSPEC + 1, j = 0;
+	     i < OVS_VPORT_TYPE_MAX; i++) {
+		if (!LIST_EMPTY(&ports[i])) {
+			ports[j] = ports[i];
+			ports[i] = (struct port_head){};
+			/* XXX update link from head */
+			ports[j].lh_first->next.le_prev = &ports[j].lh_first;
+			j++;
 		}
 	}
 }
+
 
 static int flood(struct nl *nl, struct buffer *buf, void *arg,
 		 struct nl_parser *ignore)
@@ -197,6 +210,8 @@ int main(int argc, char *argv[])
 		help(1);
 
 	alloc_port(datapath, OVS_VPORT_TYPE_INTERNAL);
+
+	compact_ports();
 
 	dp_ifindex = odp_new(&odp, &ports[0], nl_mmap);
 	if (dp_ifindex < 0)

@@ -266,7 +266,7 @@ int odp_new(struct odp *odp, struct port_head *ports, int nl_mmap)
 {
 	struct dp_req req = {};
 	struct dp *dp;
-	struct port *port;
+	struct port *port = 0;
 	int dp_ifindex, i;
 
 	if (!odp_init(odp, nl_mmap))
@@ -274,7 +274,18 @@ int odp_new(struct odp *odp, struct port_head *ports, int nl_mmap)
 
 	dp = &odp->dp;
 
-	port = LIST_FIRST(&ports[OVS_VPORT_TYPE_INTERNAL]);
+	for (i = 0; i < OVS_VPORT_TYPE_MAX; i++) {
+
+		if (LIST_EMPTY(&ports[i]))
+			return -1;
+
+		port = LIST_FIRST(&ports[i]);
+		if (port->port_type == OVS_VPORT_TYPE_INTERNAL)
+			break;
+	}
+
+	assert((port && port->port_type == OVS_VPORT_TYPE_INTERNAL));
+
 	req.dp_name = port->port_name;
 	req.dp_upcall_pid = dp_cast(&odp->dp)->local.nl_pid;
 
@@ -293,13 +304,15 @@ int odp_new(struct odp *odp, struct port_head *ports, int nl_mmap)
 
 	for (i = 0; i < OVS_VPORT_TYPE_MAX; i++) {
 		if (LIST_EMPTY(&ports[i]))
-			continue;
+			break;
 
 		port = LIST_FIRST(&ports[i]);
 
 		switch (port->port_type) {
 		case OVS_VPORT_TYPE_INTERNAL:
 			if (internal_port(odp, dp_ifindex, &ports[i]) < 0)
+				goto err;
+			if (odp_link(odp, &ports[i]) < 0)
 				goto err;
 			break;
 		case OVS_VPORT_TYPE_NETDEV:
@@ -317,20 +330,18 @@ int odp_new(struct odp *odp, struct port_head *ports, int nl_mmap)
 		}
 	}
 
-	if (odp_link(odp, &ports[OVS_VPORT_TYPE_INTERNAL]) < 0)
-		goto err;
-
-		for (i = 0; i < OVS_VPORT_TYPE_MAX; i++) {
+	for (i = 0; i < OVS_VPORT_TYPE_MAX; i++) {
 		if (LIST_EMPTY(&ports[i]))
-			continue;
+			break;
 
 		LIST_FOREACH(port, &ports[i], next) {
 			if (port->opt.link.ifindex)
-				info("port #%u: %s, ifindex=%d, addr=%s\n",
+				info("port #%u: %s, ifindex=%d, addr=%s,%s\n",
 				     port->port_no,
 				     port->port_name,
 				     port->opt.link.ifindex,
-				     port->opt.link.addr);
+				     port->opt.link.addr,
+				     port->opt.link.mac);
 			else
 				info("port #%d: %s\n",
 				     port->port_no,
