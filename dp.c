@@ -52,11 +52,11 @@ struct dp *dp_downcast(struct nl *nl)
 int dp_parse(struct nl *nl, struct buffer *buf, void *arg,
 	     struct nl_parser *inner)
 {
-	struct dp *dp = dp_downcast(nl);
+	struct ovs_datapath_family *dp = &ovs_downcast(nl)->family.dp;
 	struct nlattr* nla;
 	int ret = 0;
 
-	memset(dp, 0, offsetof(struct dp, ovs));
+	memset(dp_downcast(nl), 0, offsetof(struct dp, ovs));
 
 	while (!ret && !nla_parse(buf, &nla,0)) {
 		switch (nla->nla_type) {

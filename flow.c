@@ -52,12 +52,12 @@ struct flow *flow_downcast(struct nl *nl)
 int flow_parse(struct nl *nl, struct buffer *buf, void *arg,
 	       struct nl_parser *inner)
 {
-	struct flow *f = flow_downcast(nl);
+	struct ovs_flow_family *f = &ovs_downcast(nl)->family.flow;
 	struct nlattr* nla;
 	struct buffer slice;
 	int ret = -1;
 
-	memset(f, 0, offsetof(struct flow, ovs));
+	memset(flow_downcast(nl), 0, offsetof(struct flow, ovs));
 
 	while (!nla_parse(buf, &nla, 0)) {
 		switch (nla->nla_type) {
@@ -138,7 +138,7 @@ static int flood(struct buffer *buf, void *arg)
 	struct ovs_header ovsh = {
 		.dp_ifindex = req->dp_ifindex,
 	};
-	struct packet *p = req->packet;
+	struct ovs_packet_family *p = &req->packet->ovs.family.packet;
 	__u32 in_port = p->key.key_in_port;
 	struct port *out;
 	struct nlattr *nest[1];

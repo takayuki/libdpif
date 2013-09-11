@@ -17,20 +17,10 @@
 #define _PACKET_H
 
 #include <linux/types.h>
-#include "action.h"
 #include "ovs.h"
 #include "port.h"
 
-struct opaque_data {
-	char	*data;
-	int	 len;
-};
-
 struct packet {
-	struct opaque_data	packet_frame;
-	struct opaque_data	packet_key;
-	struct key		key;
-
 	struct ovs		ovs;
 };
 

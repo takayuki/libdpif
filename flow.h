@@ -16,15 +16,10 @@
 #ifndef _FLOW_H
 #define _FLOW_H
 
-#include "action.h"
 #include "ovs.h"
 #include "packet.h"
 
 struct flow {
-	struct opaque_data	flow_key;
-
-	struct key		key;
-
 	struct ovs		ovs;
 };
 

@@ -23,19 +23,6 @@
 #include "ovs.h"
 
 struct vport {
-	char			*vport_name;
-	__u32			 vport_no;
-	__u32			 vport_type;
-	__u32			 vport_upcall_pid;
-	struct ovs_vport_stats	*vport_stats;
-	union {
-		struct {
-			__u32	 flags;
-			__be32	 dst_ipv4;
-			__be32	 src_ipv4;
-		} tunnel;
-	} options;
-
 	struct ovs		 ovs;
 };
 

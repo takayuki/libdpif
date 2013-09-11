@@ -49,7 +49,7 @@ struct vport* vport_downcast(struct nl *nl)
 	return container_of(ovs, struct vport, ovs);
 }
 
-static int parse_options(struct buffer *buf, struct vport *vport)
+static int parse_options(struct buffer *buf, struct ovs_vport_family *vport)
 {
 	struct nlattr *nla;
 
@@ -66,11 +66,11 @@ static int parse_options(struct buffer *buf, struct vport *vport)
 int vport_parse(struct nl *nl, struct buffer *buf, void *arg,
 		struct nl_parser *inner)
 {
-	struct vport *vport = vport_downcast(nl);
+	struct ovs_vport_family *vport = &ovs_downcast(nl)->family.vport;
 	struct nlattr* nla;
 	int ret = 0;
 
-	memset(vport, 0, offsetof(struct vport, ovs));
+	memset(vport_downcast(nl), 0, offsetof(struct vport, ovs));
 
 	while (!ret && !nla_parse(buf, &nla,0)) {
 		switch (nla->nla_type) {

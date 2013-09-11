@@ -22,10 +22,6 @@
 #include "ovs.h"
 
 struct dp {
-	char			*dp_name;
-	__u32			 dp_upcall_pid;
-	struct ovs_dp_stats	*dp_stats;
-
 	struct ovs		 ovs;
 };
 

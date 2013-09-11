@@ -96,7 +96,7 @@ internal_port(struct odp *odp, int dp_ifindex, struct port_head *ports)
 			goto err;
 		}
 
-		port->port_no = odp->vport.vport_no;
+		port->port_no = odp->vport.ovs.family.vport.vport_no;
 	}
 	return 0;
 err:
@@ -120,7 +120,7 @@ netdev_port(struct odp *odp, int dp_ifindex, struct port_head *ports)
 			info("unable to add port %s\n", req.vport_name);
 			goto err;
 		}
-		port->port_no = odp->vport.vport_no;
+		port->port_no = odp->vport.ovs.family.vport.vport_no;;
 	}
 	return 0;
 err:
@@ -162,7 +162,7 @@ tunnel_port(struct odp *odp, int dp_ifindex, struct port_head *ports)
 	}
 
 	LIST_FOREACH(port, ports, next)
-		port->port_no = odp->vport.vport_no;
+		port->port_no = odp->vport.ovs.family.vport.vport_no;
 
 	return 0;
 err:

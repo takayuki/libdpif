@@ -17,9 +17,54 @@
 #define _OVS_H
 
 #include <linux/types.h>
+#include "action.h"
 #include "nlctrl.h"
 
+struct opaque_data {
+	char	*data;
+	int	 len;
+};
+
+struct ovs_datapath_family {
+	char			*dp_name;
+	__u32			 dp_upcall_pid;
+	struct ovs_dp_stats	*dp_stats;
+};
+
+struct ovs_vport_family {
+	char			*vport_name;
+	__u32			 vport_no;
+	__u32			 vport_type;
+	__u32			 vport_upcall_pid;
+	struct ovs_vport_stats	*vport_stats;
+	union {
+		struct {
+			__u32	 flags;
+			__be32	 dst_ipv4;
+			__be32	 src_ipv4;
+		} tun;
+	} opt;
+};
+
+struct ovs_flow_family {
+	struct opaque_data	flow_key;
+	struct key		key;
+};
+
+struct ovs_packet_family {
+	struct opaque_data	packet_frame;
+	struct opaque_data	packet_key;
+	struct key		key;
+};
+
 struct ovs {
+	union {
+		struct ovs_datapath_family	dp;
+		struct ovs_vport_family		vport;
+		struct ovs_flow_family		flow;
+		struct ovs_packet_family	packet;
+	} family;
+
 	struct ovs_header	*ovsh;
 
 	__u16			 ovs_datapath_family;

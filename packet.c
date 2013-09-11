@@ -51,12 +51,12 @@ struct packet* packet_downcast(struct nl *nl)
 int packet_parse(struct nl *nl, struct buffer *buf, void *arg,
 		 struct nl_parser *inner)
 {
-	struct packet *p = packet_downcast(nl);
+	struct ovs_packet_family *p = &ovs_downcast(nl)->family.packet;
 	struct nlattr* nla;
 	struct buffer slice;
 	int ret = -1;
 
-	memset(p, 0, offsetof(struct packet, ovs));
+	memset(packet_downcast(nl), 0, offsetof(struct packet, ovs));
 
 	while (!nla_parse(buf, &nla, 0)) {
 		switch (nla->nla_type) {
@@ -137,7 +137,7 @@ static int flood(struct buffer *buf, void *arg)
 	struct ovs_header ovsh = {
 		.dp_ifindex = req->dp_ifindex,
 	};
-	struct packet *p = req->packet;
+	struct ovs_packet_family *p = &req->packet->ovs.family.packet;
 	__u32 in_port = p->key.key_in_port;
 	struct port *out;
 	struct nlattr *nest[1];
