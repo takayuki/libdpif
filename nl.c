@@ -274,20 +274,26 @@ static int nl_poll(struct nl *nl, short int events)
 
 int nl_pollout(struct nl *nl, struct buffer *snd)
 {
-	volatile struct nl_mmap_hdr *hdr;
+	struct nl_mmap_hdr *hdr = snd->memory->addr;
+	unsigned int nm_status;
+	unsigned long i;
 	int ret = 0;
 
 	if (!nl->nl_mmap)
 		return 0;
 
-	for (hdr = snd->memory->addr;
-	     hdr->nm_status != NL_MMAP_STATUS_UNUSED;
-	     hdr = snd->memory->addr) {
-		ret = nl_poll(nl, POLLOUT);
-		if (ret <= 0)
-			return -1;
+	for (i = 0; ; i++) {
+		nm_status = __atomic_load_n(&hdr->nm_status, __ATOMIC_SEQ_CST);
+
+		if (nm_status == NL_MMAP_STATUS_UNUSED)
+			return 0;
+
+		if (i > NL_MMAP_TEST_LOOP) {
+			ret = nl_poll(nl, POLLOUT);
+			if (ret <= 0)
+				return ret;
+		}
 	}
-	return 0;
 }
 
 int nl_pollin(struct nl *nl, struct buffer *rcv)
