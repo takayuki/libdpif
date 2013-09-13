@@ -38,7 +38,7 @@ struct nl *flow_cast(struct flow *);
 struct flow *flow_downcast(struct nl *);
 int flow_parse(struct nl *, struct buffer *, void *, struct nl_parser *);
 int flow_build(struct flow *, struct buffer *, void *, flow_builder_t);
-int flow_exec(struct flow *, void *, flow_builder_t);
+int flow_run(struct flow *, void *, flow_builder_t);
 
 #define _FLOW_BUILDER_DECL(builder)			\
 int flow_##builder(struct flow *, struct buffer *, void *);

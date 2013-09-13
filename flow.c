@@ -99,7 +99,7 @@ int flow_build(struct flow *flow, struct buffer *buf, void *arg,
 	return nl_frame_build(buf->memory, build(flow, buf, arg));
 }
 
-int flow_exec(struct flow *flow, void *arg, flow_builder_t build)
+int flow_run(struct flow *flow, void *arg, flow_builder_t build)
 {
 	struct nl *nl = flow_cast(flow);
 	struct buffer buf;
@@ -116,7 +116,6 @@ int flow_exec(struct flow *flow, void *arg, flow_builder_t build)
 	ret = nl_send(nl, &buf, inner);
 	if (ret <= 0)
 		goto err;
-	ret = nl_dispatch(nl, inner);
 err:
 	buffer_release(&buf);
 	assert(mem.refcnt == 0);
@@ -176,4 +175,4 @@ static int flood(struct buffer *buf, void *arg)
 
 	return 0;
 }
-_FLOW_BUILDER(flood, NLM_F_ACK, OVS_FLOW_CMD_NEW)
+_FLOW_BUILDER(flood, 0, OVS_FLOW_CMD_NEW)

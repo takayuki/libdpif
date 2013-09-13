@@ -39,7 +39,7 @@ struct nl *packet_cast(struct packet *);
 struct packet* packet_downcast(struct nl *);
 int packet_parse(struct nl *, struct buffer *, void *, struct nl_parser *);
 int packet_build(struct packet *, struct buffer *, void *, packet_builder_t);
-int packet_exec(struct packet *, void *, packet_builder_t);
+int packet_run(struct packet *, void *, packet_builder_t);
 
 #define _PACKET_BUILDER_DECL(builder)			\
 int packet_##builder(struct packet *, struct buffer *, void *);

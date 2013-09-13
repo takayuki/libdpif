@@ -76,13 +76,13 @@ static int flood(struct nl *nl, struct buffer *buf, void *arg,
 	switch (ntohs(packet->ovs.family.packet.key.key_ethertype)) {
 	case 0x0806: /* ARP */
 		if (flood_mode >= 1) {
-			if (packet_exec(packet, &req, packet_flood) < 0)
+			if (packet_run(packet, &req, packet_flood) < 0)
 				goto err;
 		}
 		break;
 	default:
 		if (flood_mode >= 2) {
-			if (packet_exec(packet, &req, packet_flood) < 0)
+			if (packet_run(packet, &req, packet_flood) < 0)
 				goto err;
 		}
 	}
@@ -96,7 +96,7 @@ static int flood(struct nl *nl, struct buffer *buf, void *arg,
 			.ports = ports,
 		};
 
-		if (flow_exec(flow, &req, flow_flood) < 0)
+		if (flow_run(flow, &req, flow_flood) < 0)
 			goto err;
 	}
 	return 0;

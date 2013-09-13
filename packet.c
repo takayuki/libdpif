@@ -98,7 +98,7 @@ int packet_build(struct packet *packet, struct buffer *buf, void *arg,
 	return nl_frame_build(buf->memory, build(packet, buf, arg));
 }
 
-int packet_exec(struct packet *packet, void *arg, packet_builder_t build)
+int packet_run(struct packet *packet, void *arg, packet_builder_t build)
 {
 	struct nl *nl = packet_cast(packet);
 	struct buffer buf;
@@ -115,7 +115,6 @@ int packet_exec(struct packet *packet, void *arg, packet_builder_t build)
 	ret = nl_send(nl, &buf, inner);
 	if (ret <= 0)
 		goto err;
-	ret = nl_dispatch(nl, inner);
 err:
 	buffer_release(&buf);
 	assert(mem.refcnt == 0);
@@ -177,4 +176,4 @@ static int flood(struct buffer *buf, void *arg)
 		     OVS_PACKET_ATTR_PACKET);
 	return 0;
 }
-_PACKET_BUILDER(flood, NLM_F_ACK, OVS_PACKET_CMD_EXECUTE)
+_PACKET_BUILDER(flood, 0, OVS_PACKET_CMD_EXECUTE)
