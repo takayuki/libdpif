@@ -38,7 +38,7 @@ struct odp *odp_init(struct odp *odp, int nl_mmap)
 	if (!flow_init(&odp->flow, medium))
 		goto err_flow;
 
-	if (!packet_init(&odp->packet, small))
+	if (!packet_init(&odp->packet, large))
 		goto err_packet;
 
 	if (!rtnl_init(&odp->rtnl, 0))
