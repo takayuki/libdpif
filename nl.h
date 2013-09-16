@@ -93,12 +93,18 @@ struct nl_ring {
 	unsigned int	 offset;
 };
 
+struct nl_stats {
+	unsigned long	polls;
+	unsigned long	packets;
+	unsigned long	bytes;
+};
+
 struct nl {
 	struct nlmsghdr		*nlh;
 	struct nlmsgerr		*nle;
 
-	unsigned long		 rx_poll;
-	unsigned long		 tx_poll;
+	struct nl_stats		 rx_stats;
+	struct nl_stats		 tx_stats;
 
 	__u32			 seq;
 
@@ -128,6 +134,7 @@ int nl_parse(struct nl *, struct buffer *, struct nl_parser *);
 int nl_send(struct nl *, struct buffer *, struct nl_parser *);
 int nl_dispatch(struct nl *, struct nl_parser *);
 int nl_exec(struct nl *, struct buffer *, struct nl_parser *);
+void nl_stats_delta(struct nl_stats *, struct nl_stats *, struct nl_stats *);
 
 #ifndef container_of
 #define container_of(ptr, type, member)					\

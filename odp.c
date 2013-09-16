@@ -16,7 +16,6 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
-#include <sys/time.h>
 #include <unistd.h>
 #include "nl.h"
 #include "ovs.h"
@@ -365,15 +364,7 @@ int odp_loop(struct nl *nl, struct nl_parser *dispatch)
 		{ .parse = genl_parse, },
 		{ .parse = dispatch->parse, },
 	};
-	struct timeval last, now, diff;
-	double elapsed;
-	unsigned int rx_packets = 0, rx_bytes = 0;
 	int quit = 0, ret = 0;
-
-	if (gettimeofday(&last, 0) < 0) {
-		perror("gettimeofday");
-		return -1;
-	}
 
 	while (!quit) {
 		nl_frame_init(&buf, &mem, &nl->rx_ring);
@@ -387,31 +378,11 @@ int odp_loop(struct nl *nl, struct nl_parser *dispatch)
 			goto next;
 		}
 
-		rx_bytes += ret;
-		rx_packets += 1;
 		while (!nl_parse(nl, &buf, inner))
 			;
 
 		assert(buffer_remaining(&buf) == 0);
 
-		if (rx_bytes < ODP_STAT_BYTES_INTERVAL)
-			goto next;
-
-		if (gettimeofday(&now, 0) < 0) {
-			perror("gettimeofday");
-			quit = 1;
-			goto next;
-		}
-
-		timersub(&now, &last, &diff);
-		elapsed = diff.tv_sec * 1000000 + diff.tv_usec;
-
-		info("%.3lf Kfps, %.3lf Mbps\t\t\t\t\r",
-		     rx_packets / elapsed * 1000000 / 1024,
-		     rx_bytes / elapsed * 1000000 / (1024 * 1024));
-
-		rx_packets = rx_bytes = 0;
-		last = now;
 	next:
 		nl_frame_release(&buf);
 	}

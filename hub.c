@@ -18,12 +18,15 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "odp.h"
+#include "timer.h"
 #include "utils.h"
 
+static struct odp odp;
 static struct port_head ports[OVS_VPORT_TYPE_MAX];
 static int dp_ifindex;
 static int nl_mmap;
 static int flood_mode = 3;
+static int timer_interval = 5000;
 
 __attribute__((constructor))
 void hub_init()
@@ -61,7 +64,6 @@ static void compact_ports()
 		}
 	}
 }
-
 
 static int flood(struct nl *nl, struct buffer *buf, void *arg,
 		 struct nl_parser *ignore)
@@ -159,15 +161,37 @@ static void alloc_port(char *options, __u32 type)
 	LIST_INSERT_HEAD(&ports[type], port, next);
 }
 
+static void timer_handler(int signum)
+{
+	static struct nl_stats rx_stats = {};
+	static struct nl_stats tx_stats = {};
+	struct nl_stats rx_delta = {};
+	struct nl_stats tx_delta = {};
+	static struct timeval last = {};
+	long elapsed;
+
+	elapsed = timer_sub(&last);
+	if (elapsed <= 0)
+		return;
+
+	nl_stats_delta(&odp.dp.ovs.genl.nl.rx_stats, &rx_stats, &rx_delta);
+	nl_stats_delta(&odp.packet.ovs.genl.nl.tx_stats, &tx_stats, &tx_delta);
+
+	info("Rx: %.2lf Kfps,%.2lf Mbps Tx: %.2lf Kfps,%.2lf Mbps\t\t\t\t\r",
+	     timer_stat(rx_delta.packets, elapsed, 1024),
+	     timer_stat(rx_delta.bytes, elapsed, 1024 * 1024),
+	     timer_stat(tx_delta.packets, elapsed, 1024),
+	     timer_stat(tx_delta.bytes, elapsed, 1024 * 1024));
+}
+
 int main(int argc, char *argv[])
 {
-	struct odp odp;
 	struct nl_parser parser = { .parse = dispatch };
 	char *datapath = "dp0";
 	__u32  type;
 	int ch, status;
 
-	while ((ch = getopt(argc,argv,"MF:d:i:n:g:G:L:h")) != -1) {
+	while ((ch = getopt(argc,argv,"MF:d:i:n:g:G:L:t:h")) != -1) {
 		type = OVS_VPORT_TYPE_UNSPEC;
 		switch (ch) {
 		case 'M':
@@ -194,6 +218,9 @@ int main(int argc, char *argv[])
 		case 'L':
 			type = OVS_VPORT_TYPE_LISP;
 			break;
+		case 't':
+			timer_interval = atoi(optarg);
+			break;
 		case 'h':
 			help(0);
 		default:
@@ -216,6 +243,8 @@ int main(int argc, char *argv[])
 	dp_ifindex = odp_new(&odp, &ports[0], nl_mmap);
 	if (dp_ifindex < 0)
 		exit(1);
+
+	timer(timer_handler, timer_interval);
 
 	status = odp_loop(dp_cast(&odp.dp), &parser);
 	odp_free(&odp);

@@ -248,9 +248,9 @@ static int nl_poll(struct nl *nl, short int events)
 	int ret;
 
 	if ((events & POLLIN))
-		nl->rx_poll++;
+		nl->rx_stats.polls++;
 	else if ((events & POLLOUT))
-		nl->tx_poll++;
+		nl->tx_stats.polls++;
 
 	do {
 		ret = poll(fds, 1, -1);
@@ -374,6 +374,10 @@ int nl_recv(struct nl *nl, struct buffer *rcv)
 		buffer_set_position(rcv, hdr->nm_len);
 		buffer_flip(rcv);
 		ret = buffer_remaining(rcv);
+
+		nl->rx_stats.packets++;
+		nl->rx_stats.bytes += ret;
+
 		return ret;
 	case NL_MMAP_STATUS_COPY:
 		/* release frame back to the kernel later */
@@ -394,10 +398,14 @@ copy:
 		perror("read");
 		return ret;
 	}
-
 	buffer_set_position(rcv, ret);
 	buffer_flip(rcv);
-	return buffer_remaining(rcv);
+
+	assert(ret == buffer_remaining(rcv));
+
+	nl->rx_stats.packets++;
+	nl->rx_stats.bytes += ret;
+	return ret;
 }
 
 int nl_parse(struct nl *nl, struct buffer *buf, struct nl_parser *inner)
@@ -490,6 +498,9 @@ int nl_send(struct nl *nl, struct buffer *snd, struct nl_parser *inner)
 		ret = write(nl->fd, buffer_data(snd), buffer_remaining(snd));
 	}
 
+	nl->tx_stats.packets++;
+	nl->tx_stats.bytes += ret;
+
 	return ret;
 }
 
@@ -548,4 +559,14 @@ int nl_exec(struct nl *nl, struct buffer *buf, struct nl_parser *inner)
 		return ret;
 
 	return nl_dispatch(nl, inner);
+}
+
+void nl_stats_delta(struct nl_stats *curr,
+		    struct nl_stats *prev,
+		    struct nl_stats *delta)
+{
+	delta->polls   += (curr->polls   - prev->polls);
+	delta->packets += (curr->packets - prev->packets);
+	delta->bytes   += (curr->bytes   - prev->bytes);
+	*prev	       = *curr;
 }

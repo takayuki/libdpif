@@ -13,29 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _ODP_H
-#define _ODP_H
 
-#include <openvswitch.h>
-#include "dp.h"
-#include "flow.h"
-#include "ovs.h"
-#include "packet.h"
-#include "rtnl.h"
-#include "vport.h"
+#ifndef _TIMER_H
+#define _TIMER_H
 
-struct odp {
-	struct dp	dp;
-	struct vport	vport;
-	struct flow	flow;
-	struct packet	packet;
-	struct rtnl     rtnl;
-};
-
-struct odp *odp_init(struct odp *, int);
-void odp_free(struct odp *);
-struct odp *odp_downcast(struct nl *);
-int odp_new(struct odp *, struct port_head *, int);
-int odp_loop(struct nl *, struct nl_parser *);
+double timer_stat(unsigned long, long, long);
+long timer_sub(struct timeval *);
+int timer(void (*)(int), int);
 
 #endif
