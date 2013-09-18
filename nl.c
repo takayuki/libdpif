@@ -391,11 +391,11 @@ int nl_recv(struct nl *nl, struct buffer *rcv)
 	}
 
 copy:
-	ret = read(nl->fd, buffer_data(rcv), buffer_remaining(rcv));
+	ret = recv(nl->fd, buffer_data(rcv), buffer_remaining(rcv), 0);
 	if (ret == 0) {
-		info("read: empty data");
+		info("recv: empty data\n");
 	} else if (ret < 0) {
-		perror("read");
+		perror("recv");
 		return ret;
 	}
 	buffer_set_position(rcv, ret);
@@ -474,6 +474,10 @@ int nl_send(struct nl *nl, struct buffer *snd, struct nl_parser *inner)
 {
 	int ret;
 
+	ret = validate(nl, snd, inner);
+	if (ret < 0)
+		return ret;
+
 	if (nl->nl_mmap) {
 		struct nl_mmap_hdr *hdr = snd->memory->addr;
 
@@ -485,17 +489,16 @@ int nl_send(struct nl *nl, struct buffer *snd, struct nl_parser *inner)
 		      hdr->nm_uid,
 		      hdr->nm_gid);
 
-		ret = validate(nl, snd, inner);
-		if (ret < 0)
-			return ret;
-
-		ret = write(nl->fd, 0, 0);
+		ret = send(nl->fd, 0, 0, 0);
 	} else {
-		ret = validate(nl, snd, inner);
-		if (ret < 0)
-			return ret;
+		ret = send(nl->fd, buffer_data(snd), buffer_remaining(snd), 0);
+	}
 
-		ret = write(nl->fd, buffer_data(snd), buffer_remaining(snd));
+	if (ret == 0) {
+		info("send: empty data\n");
+	} else if (ret < 0) {
+		perror("send");
+		return ret;
 	}
 
 	nl->tx_stats.packets++;
