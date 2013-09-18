@@ -95,13 +95,13 @@ static struct nl *nl_mmap(struct nl *nl, struct nl_mmap_req *req)
 	void *addr;
 
 	if (req)
-		nl->nl_mmap = 1;
+		nl->use_mmap = 1;
 	else {
 		req = &nl_small_map;
-		nl->nl_mmap = 0;
+		nl->use_mmap = 0;
 	}
 
-	if (nl->nl_mmap) {
+	if (nl->use_mmap) {
 		if (setsockopt(nl->fd, SOL_NETLINK, NETLINK_RX_RING,
 			       req, sizeof(*req)) < 0) {
 			perror("setsockopt");
@@ -124,7 +124,7 @@ static struct nl *nl_mmap(struct nl *nl, struct nl_mmap_req *req)
 
 	size = req->nm_block_size * req->nm_block_nr * 2;
 
-	if (nl->nl_mmap)
+	if (nl->use_mmap)
 		addr = mmap(0, size, (PROT_READ | PROT_WRITE),
 			    MAP_SHARED, nl->fd, 0);
 	else
@@ -279,7 +279,7 @@ int nl_pollout(struct nl *nl, struct buffer *snd)
 	unsigned long i;
 	int ret = 0;
 
-	if (!nl->nl_mmap)
+	if (!nl->use_mmap)
 		return 0;
 
 	for (i = 0; ; i++) {
@@ -303,7 +303,7 @@ int nl_pollin(struct nl *nl, struct buffer *rcv)
 	unsigned long i;
 	int ret = 0;
 
-	if (!nl->nl_mmap)
+	if (!nl->use_mmap)
 		return 0;
 
 	for (i = 0; ; i++) {
@@ -345,7 +345,7 @@ int nl_recv(struct nl *nl, struct buffer *rcv)
 
 	buffer_set_note(rcv, ">");
 
-	if (!nl->nl_mmap)
+	if (!nl->use_mmap)
 		goto copy;
 
 	if (nl_pollin(nl, rcv) < 0)
@@ -478,7 +478,7 @@ int nl_send(struct nl *nl, struct buffer *snd, struct nl_parser *inner)
 	if (ret < 0)
 		return ret;
 
-	if (nl->nl_mmap) {
+	if (nl->use_mmap) {
 		struct nl_mmap_hdr *hdr = snd->memory->addr;
 
 		trace("<nm_status:%u,nm_len:%u,nm_group:%u,nm_pid:%u,nm_uid:%u,nm_gid:%u\n",
@@ -518,7 +518,7 @@ int nl_dispatch(struct nl *nl, struct nl_parser *inner)
 
 		ret = nl_recv(nl, &buf);
 		if (ret == 0) {
-			quit = !nl->nl_mmap;
+			quit = !nl->use_mmap;
 			goto next;
 		} else if (ret < 0) {
 			quit = 1;

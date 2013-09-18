@@ -24,8 +24,8 @@
 static struct odp odp;
 static struct port_head ports[OVS_VPORT_TYPE_MAX];
 static int dp_ifindex;
-static int nl_mmap;
-static int flood_mode = 3;
+static int use_mmap;
+static int flood_mode = 2;
 static int timer_interval = 5000;
 
 __attribute__((constructor))
@@ -141,7 +141,7 @@ static int dispatch(struct nl *nl, struct buffer *buf, void *arg,
 
 static void help(int status)
 {
-	fprintf(stderr, "Usage: hub [-M] [-F <mode>] [-d name[,addr=<cidr>]] [-i name[,addr=<cidr>]] [-n name] [-g name,src=<addr>,dst=<addr>] [-G name,src=<addr>,dst=<addr>] [-L list,src=<addr>,dst=<addr>,port=<port>]\n");
+	fprintf(stderr, "Usage: hub [-M] [-F <mode>] [-d name[,addr=<cidr>][,mac=<lladdr>]] [-i name[,addr=<cidr>][,mac=<lladdr>]] [-n name] [-g name,src=<addr>,dst=<addr>] [-G name,src=<addr>,dst=<addr>] [-L list,src=<addr>,dst=<addr>,port=<port>]\n");
 	exit(status);
 }
 
@@ -191,11 +191,11 @@ int main(int argc, char *argv[])
 	__u32  type;
 	int ch, status;
 
-	while ((ch = getopt(argc,argv,"MF:d:i:n:g:G:L:t:h")) != -1) {
+	while ((ch = getopt(argc,argv,"MF:d:i:n:g:G:L:V:t:h")) != -1) {
 		type = OVS_VPORT_TYPE_UNSPEC;
 		switch (ch) {
 		case 'M':
-			nl_mmap = 1;
+			use_mmap = 1;
 			break;
 		case 'F':
 			flood_mode = atoi(optarg);
@@ -217,6 +217,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'L':
 			type = OVS_VPORT_TYPE_LISP;
+			break;
+		case 'V':
+			type = OVS_VPORT_TYPE_VXLAN;
 			break;
 		case 't':
 			timer_interval = atoi(optarg);
@@ -240,11 +243,12 @@ int main(int argc, char *argv[])
 
 	compact_ports();
 
-	dp_ifindex = odp_new(&odp, &ports[0], nl_mmap);
+	dp_ifindex = odp_new(&odp, &ports[0], use_mmap);
 	if (dp_ifindex < 0)
 		exit(1);
 
-	timer(timer_handler, timer_interval);
+	if (timer_interval > 0)
+		timer(timer_handler, timer_interval);
 
 	status = odp_loop(dp_cast(&odp.dp), &parser);
 	odp_free(&odp);

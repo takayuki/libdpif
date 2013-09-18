@@ -111,7 +111,7 @@ struct nl {
 	int			 fd;
 	struct sockaddr_nl	 local;
 
-	int			 nl_mmap;
+	int			 use_mmap;
 
 	struct nl_ring		 rx_ring;
 	struct nl_ring		 tx_ring;

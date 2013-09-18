@@ -22,11 +22,11 @@
 #include "odp.h"
 #include "utils.h"
 
-struct odp *odp_init(struct odp *odp, int nl_mmap)
+struct odp *odp_init(struct odp *odp, int use_mmap)
 {
-	struct nl_mmap_req *small = nl_mmap ? &nl_small_map : 0;
-	struct nl_mmap_req *medium = nl_mmap ? &nl_medium_map : 0;
-	struct nl_mmap_req *large = nl_mmap ? &nl_large_map : 0;
+	struct nl_mmap_req *small = use_mmap ? &nl_small_map : 0;
+	struct nl_mmap_req *medium = use_mmap ? &nl_medium_map : 0;
+	struct nl_mmap_req *large = use_mmap ? &nl_large_map : 0;
 
 
 	if (!dp_init(&odp->dp, large))
@@ -261,14 +261,14 @@ err:
 	return -1;
 }
 
-int odp_new(struct odp *odp, struct port_head *ports, int nl_mmap)
+int odp_new(struct odp *odp, struct port_head *ports, int use_mmap)
 {
 	struct dp_req req = {};
 	struct dp *dp;
 	struct port *port = 0;
 	int dp_ifindex, i;
 
-	if (!odp_init(odp, nl_mmap))
+	if (!odp_init(odp, use_mmap))
 		return -1;
 
 	dp = &odp->dp;
@@ -371,7 +371,7 @@ int odp_loop(struct nl *nl, struct nl_parser *dispatch)
 
 		ret = nl_recv(nl, &buf);
 		if (ret == 0) {
-			quit = !nl->nl_mmap;
+			quit = !nl->use_mmap;
 			goto next;
 		} else if (ret < 0) {
 			quit = 1;
