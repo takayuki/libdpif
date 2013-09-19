@@ -449,37 +449,9 @@ err:
 	return ret;
 }
 
-static int
-validate(struct nl *nl, struct buffer *buf, struct nl_parser *inner)
-{
-#ifndef NDEBUG
-	struct buffer tmp;
-
-	if (!buffer_clone(&tmp, buf))
-		return -1;
-
-	buffer_set_note(&tmp, "<");
-
-	while (!nl_parse(nl, &tmp, inner))
-		;
-
-	assert(buffer_remaining(&tmp) == 0);
-
-	if (buffer_remaining(&tmp) != 0)
-		return -1;
-
-	buffer_release(&tmp);
-#endif
-	return 0;
-}
-
 int nl_send(struct nl *nl, struct buffer *snd, struct nl_parser *inner)
 {
 	int ret;
-
-	ret = validate(nl, snd, inner);
-	if (ret < 0)
-		return ret;
 
 	if (nl->use_mmap) {
 		struct nl_mmap_hdr *hdr = snd->memory->addr;
