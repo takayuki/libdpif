@@ -242,13 +242,13 @@ static int odp_link(struct odp *odp, struct port_head *ports)
 	LIST_FOREACH(port, ports, next) {
 		if (port->opt.link.addr) {
 			if (link_addr(rtnl, port) < 0) {
-				info("unable to add address %s to %s",
+				info("unable to add address %s to %s\n",
 				     port->opt.link.addr,
 				     port->port_name);
 				goto err;
 			}
 			if (link_up(rtnl, port) < 0) {
-				info("unable to set link %s up",
+				info("unable to set link %s up\n",
 				     port->port_name);
 				goto err;
 			}
@@ -295,7 +295,7 @@ int odp_new(struct odp *odp, struct port_head *ports, int use_mmap)
 
 	if (dp_exec(dp, &req, dp_cmd_new) < 0 ||
 	    dp_exec(dp, &req, dp_cmd_get) < 0) {
-		info("unable to add datapath  %s", port->port_name);
+		info("unable to add datapath %s\n", port->port_name);
 		goto err;
 	}
 

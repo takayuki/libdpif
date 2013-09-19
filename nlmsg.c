@@ -27,7 +27,7 @@ struct buffer* nlmsg_begin(struct buffer *buf, struct nlmsghdr **nlhp,
 	if (buffer_remaining(buf) < NLMSG_HDRLEN)
 		return 0;
 
-	if (nl_pollout(container_of(nlhp, struct nl, nlh), buf) < 0)
+	if (nl_pollout(container_of(nlhp, struct nl, nlh), buf) <= 0)
 		return 0;
 
 	nlh = *nlhp = (struct nlmsghdr *)buffer_data(buf);

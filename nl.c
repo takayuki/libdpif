@@ -171,6 +171,7 @@ struct nl *nl_init(struct nl *nl, int protocol, struct nl_mmap_req *req)
 	s = socket(AF_NETLINK, (SOCK_DGRAM | SOCK_CLOEXEC), protocol);
 	if (s < 0)
 		return 0;
+
 	ret = bind(s, (struct sockaddr *)&sa, sizeof(sa));
 	if (ret < 0)
 		goto error;
@@ -198,6 +199,7 @@ void nl_free(struct nl *nl)
 {
 	if (munmap(nl->rx_ring.addr, nl->rx_ring.ring_size) < 0)
 		perror("munmap");
+
 	if (munmap(nl->tx_ring.addr, nl->tx_ring.ring_size) < 0)
 		perror("munmap");
 
@@ -266,18 +268,25 @@ static int nl_poll(struct nl *nl, short int events)
 		ret = poll(fds, 1, -1);
 	} while (ret < 0 && errno == EINTR);
 
-	if (ret < 0)
+	if (ret < 0) {
 		perror("poll");
+		return ret;
+	}
 
 	if ((fds[0].revents & POLLERR)) {
 		info("poll: error has occurred in stream\n");
 		return -1;
 	}
 
-	if ((events & POLLIN) && !(fds[0].revents & POLLIN))
-		info("poll: stream not readable\n");
-	else if ((events & POLLOUT) && !(fds[0].revents & POLLOUT))
-		info("poll: stream not writable\n");
+	if ((events & POLLIN) && !(fds[0].revents & POLLIN)) {
+		info("poll: stream is not readable yet\n");
+		return 0;
+	}
+
+	if ((events & POLLOUT) && !(fds[0].revents & POLLOUT)) {
+		info("poll: stream is not writable yet\n");
+		return 0;
+	}
 
 	return ret;
 }
@@ -290,13 +299,13 @@ int nl_pollout(struct nl *nl, struct buffer *snd)
 	int ret = 0;
 
 	if (!nl->use_mmap)
-		return 0;
+		return 1;
 
 	for (i = 0; ; i++) {
 		nm_status = __atomic_load_n(&hdr->nm_status, __ATOMIC_SEQ_CST);
 
 		if (nm_status == NL_MMAP_STATUS_UNUSED)
-			return 0;
+			return 1;
 
 		if (i > NL_MMAP_TEST_LOOP) {
 			ret = nl_poll(nl, POLLOUT);
@@ -314,13 +323,13 @@ int nl_pollin(struct nl *nl, struct buffer *rcv)
 	int ret = 0;
 
 	if (!nl->use_mmap)
-		return 0;
+		return 1;
 
 	for (i = 0; ; i++) {
 		nm_status = __atomic_load_n(&hdr->nm_status, __ATOMIC_SEQ_CST);
 
 		if (nm_status >= NL_MMAP_STATUS_VALID)
-			return 0;
+			return 1;
 
 		if (i > NL_MMAP_TEST_LOOP) {
 			ret = nl_poll(nl, POLLIN);
@@ -358,7 +367,7 @@ int nl_recv(struct nl *nl, struct buffer *rcv)
 	if (!nl->use_mmap)
 		goto copy;
 
-	if (nl_pollin(nl, rcv) < 0)
+	if (nl_pollin(nl, rcv) <= 0)
 		return -1;
 
 	hdr = rcv->memory->addr;
@@ -387,7 +396,6 @@ int nl_recv(struct nl *nl, struct buffer *rcv)
 
 		nl->rx_stats.packets++;
 		nl->rx_stats.bytes += ret;
-
 		return ret;
 	case NL_MMAP_STATUS_COPY:
 		/* release frame back to the kernel later */
@@ -523,8 +531,9 @@ int nl_dispatch(struct nl *nl, struct nl_parser *inner)
 			if (nl->nlh->nlmsg_flags & NLM_F_MULTI) {
 				if (nl->nlh->nlmsg_type == NLMSG_DONE)
 					quit = 1;
-			} else
+			} else {
 				quit = 1;
+			}
 		}
 
 		assert(buffer_remaining(&buf) == 0);
