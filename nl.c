@@ -39,9 +39,9 @@ struct nl_mmap_req nl_medium_map = {
 
 struct nl_mmap_req nl_large_map = {
 	.nm_block_size		      = 65536,
-	.nm_block_nr		      = 64,
-	.nm_frame_size		      = 16384,
-	.nm_frame_nr		      = 64 * 65536 / 16384,
+	.nm_block_nr		      = 256,
+	.nm_frame_size		      = 65536,
+	.nm_frame_nr		      = 256 * 65536 / 65536,
 };
 
 static void nl_ring_init(struct nl_ring *ring, void *addr,
