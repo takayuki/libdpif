@@ -206,7 +206,9 @@ void nl_frame_release(struct buffer *buf)
 	switch (hdr->nm_status) {
 	case NL_MMAP_STATUS_VALID:
 	case NL_MMAP_STATUS_COPY:
-		hdr->nm_status = NL_MMAP_STATUS_UNUSED;
+		__atomic_store_n(&hdr->nm_status, NL_MMAP_STATUS_UNUSED,
+				 __ATOMIC_SEQ_CST);
+		break;
 	default:
 		break;
 	}
@@ -223,7 +225,8 @@ int nl_frame_build(struct memory *mem, int ret)
 	memset(hdr, 0 ,sizeof(*hdr));
 
 	hdr->nm_len = nlh->nlmsg_len;
-	hdr->nm_status =  NL_MMAP_STATUS_VALID;
+	__atomic_store_n(&hdr->nm_status, NL_MMAP_STATUS_VALID,
+			 __ATOMIC_SEQ_CST);
 	return 0;
 }
 
