@@ -54,6 +54,17 @@ static void nl_ring_init(struct nl_ring *ring, void *addr,
 	ring->nl	 = nl;
 }
 
+static int nl_ring_set(struct nl *nl, int opt, struct nl_mmap_req *req)
+{
+	int ret;
+
+	ret = setsockopt(nl->fd, SOL_NETLINK, opt, req, sizeof(*req));
+	if (ret < 0)
+		perror("setsockopt");
+
+	return ret;
+}
+
 static int nl_sndbuf(struct nl *nl, int size)
 {
 	int ret;
@@ -89,6 +100,18 @@ static int nl_no_enobufs(struct nl *nl)
 	return ret;
 }
 
+int nl_subscribe(struct nl *nl, __u32 group)
+{
+	int ret;
+
+	ret = setsockopt(nl->fd, SOL_NETLINK, NETLINK_ADD_MEMBERSHIP,
+			 &group, sizeof(group));
+	if (ret < 0)
+		perror("setsockopt");
+
+	return ret;
+}
+
 static struct nl *nl_mmap(struct nl *nl, struct nl_mmap_req *req)
 {
 	unsigned int size;
@@ -102,15 +125,11 @@ static struct nl *nl_mmap(struct nl *nl, struct nl_mmap_req *req)
 	}
 
 	if (nl->use_mmap) {
-		if (setsockopt(nl->fd, SOL_NETLINK, NETLINK_RX_RING,
-			       req, sizeof(*req)) < 0) {
-			perror("setsockopt");
+		if (nl_ring_set(nl, NETLINK_RX_RING, req) < 0)
 			return 0;
-		} else if (setsockopt(nl->fd, SOL_NETLINK, NETLINK_TX_RING,
-				      req, sizeof(*req)) < 0) {
-			perror("setsockopt");
+
+		if (nl_ring_set(nl, NETLINK_TX_RING, req) < 0)
 			return 0;
-		}
 	}
 
 	if (nl_sndbuf(nl, NL_SNDBUF_SIZE) < 0)
@@ -228,18 +247,6 @@ int nl_frame_build(struct memory *mem, int ret)
 	__atomic_store_n(&hdr->nm_status, NL_MMAP_STATUS_VALID,
 			 __ATOMIC_SEQ_CST);
 	return 0;
-}
-
-int nl_subscribe(struct nl *nl, __u32 group)
-{
-	int ret;
-
-	ret = setsockopt(nl->fd, SOL_NETLINK, NETLINK_ADD_MEMBERSHIP,
-			 &group, sizeof(group));
-	if (ret < 0)
-		perror("setsockopt");
-
-	return ret;
 }
 
 static int nl_poll(struct nl *nl, short int events)
