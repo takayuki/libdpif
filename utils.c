@@ -92,20 +92,24 @@ int ip4_netmask(char *addr)
 	}
 }
 
+int debug_level = 0;
+
 void info(const char *fmt, ...)
 {
-	va_list ap;
-	va_start(ap, fmt);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
+	if (debug_level >= 1) {
+		va_list ap;
+		va_start(ap, fmt);
+		vfprintf(stderr, fmt, ap);
+		va_end(ap);
+	}
 }
 
 void trace(const char *fmt, ...)
 {
-#ifndef NDEBUG
-	va_list ap;
-	va_start(ap, fmt);
-	vfprintf(stderr, fmt, ap);
-	va_end(ap);
-#endif
+	if (debug_level >= 2) {
+		va_list ap;
+		va_start(ap, fmt);
+		vfprintf(stderr, fmt, ap);
+		va_end(ap);
+	}
 }

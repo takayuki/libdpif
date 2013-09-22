@@ -141,7 +141,7 @@ static int dispatch(struct nl *nl, struct buffer *buf, void *arg,
 
 static void help(int status)
 {
-	fprintf(stderr, "Usage: hub [-M] [-F <mode>] [-d name[,addr=<cidr>][,mac=<lladdr>]] [-i name[,addr=<cidr>][,mac=<lladdr>]] [-n name] [-g name,src=<addr>,dst=<addr>] [-G name,src=<addr>,dst=<addr>] [-L list,src=<addr>,dst=<addr>,port=<port>]\n");
+	fprintf(stderr, "Usage: hub [-Mv] [-F <mode>] [-d name[,addr=<cidr>][,mac=<lladdr>]] [-i name[,addr=<cidr>][,mac=<lladdr>]] [-n name] [-g name,src=<addr>,dst=<addr>] [-G name,src=<addr>,dst=<addr>] [-L name,src=<addr>,dst=<addr>,port=<port>] [-V name,src=<addr>,dst=<addr>,port=<port>]\n");
 	exit(status);
 }
 
@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
 	__u32  type;
 	int ch, status;
 
-	while ((ch = getopt(argc,argv,"MF:d:i:n:g:G:L:V:t:h")) != -1) {
+	while ((ch = getopt(argc,argv,"MF:d:i:n:g:G:L:V:t:vh")) != -1) {
 		type = OVS_VPORT_TYPE_UNSPEC;
 		switch (ch) {
 		case 'M':
@@ -223,6 +223,9 @@ int main(int argc, char *argv[])
 			break;
 		case 't':
 			timer_interval = atoi(optarg);
+			break;
+		case 'v':
+			debug_level += 1;
 			break;
 		case 'h':
 			help(0);
