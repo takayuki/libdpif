@@ -26,7 +26,7 @@ static struct port_head ports[__OVS_VPORT_TYPE_MAX+1];
 static int dp_ifindex;
 static int use_mmap;
 static int flood_mode = 2;
-static int timer_interval = 5000;
+static int timer_interval = 0;
 
 __attribute__((constructor))
 void hub_init()
@@ -247,10 +247,9 @@ int main(int argc, char *argv[])
 	if (dp_ifindex < 0)
 		exit(1);
 
-#ifdef NDEBUG
 	if (timer_interval > 0)
 		timer(timer_handler, timer_interval);
-#endif
+
 	status = odp_loop(dp_cast(&odp.dp), &parser);
 	odp_free(&odp);
 	return status;
