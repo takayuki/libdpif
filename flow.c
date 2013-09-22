@@ -150,7 +150,7 @@ static int flood(struct buffer *buf, void *arg)
 
 	nla_nest_begin(buf,&nest[0],OVS_FLOW_ATTR_ACTIONS);
 
-	for (i = 0; i < OVS_VPORT_TYPE_MAX; i++) {
+	for (i = 0; i < __OVS_VPORT_TYPE_MAX; i++) {
 		if (LIST_EMPTY(&req->ports[i]))
 			break;
 

@@ -20,7 +20,6 @@
 
 static int parse_pair(struct port *port, char *key, char *value)
 {
-	__u32 ipv4;
 
 	if (key == 0 || *key == 0)
 		return -1;
@@ -40,17 +39,11 @@ static int parse_pair(struct port *port, char *key, char *value)
 	} else if (!strcmp(key,"src")) {
 		if (value == 0 || *value == 0)
 			return -1;
-		ipv4 = ip4_addr(value);
-		if (ipv4 == 0)
-			return -1;
-		port->key.src_ipv4 = ipv4;
+		port->opt.tun.src_ipv4 = value;
 	} else if (!strcmp(key,"dst")) {
 		if (value == 0 || *value == 0)
 			return -1;
-		ipv4 = ip4_addr(value);
-		if (ipv4 == 0)
-			return -1;
-		port->key.dst_ipv4 = ipv4;
+		port->opt.tun.dst_ipv4 = value;
 	} else if (!strcmp(key,"port")) {
 		if (value == 0 || *value == 0)
 			return -1;

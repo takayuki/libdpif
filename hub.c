@@ -22,7 +22,7 @@
 #include "utils.h"
 
 static struct odp odp;
-static struct port_head ports[OVS_VPORT_TYPE_MAX];
+static struct port_head ports[__OVS_VPORT_TYPE_MAX+1];
 static int dp_ifindex;
 static int use_mmap;
 static int flood_mode = 2;
@@ -33,7 +33,7 @@ void hub_init()
 {
 	int i;
 
-	for (i = 0; i < OVS_VPORT_TYPE_MAX; i++)
+	for (i = 0; i < __OVS_VPORT_TYPE_MAX; i++)
 		LIST_INIT(&ports[i]);
 }
 
@@ -43,7 +43,7 @@ void hub_exit(void)
 	int i;
 	struct port *port;
 
-	for (i = 0; i < OVS_VPORT_TYPE_MAX; i++) {
+	for (i = 0; i < __OVS_VPORT_TYPE_MAX; i++) {
 		LIST_FOREACH(port, &ports[i], next)
 			free(port);
 	}
@@ -54,7 +54,7 @@ static void compact_ports()
 	int i, j;
 
 	for (i = OVS_VPORT_TYPE_UNSPEC + 1, j = 0;
-	     i < OVS_VPORT_TYPE_MAX; i++) {
+	     i < __OVS_VPORT_TYPE_MAX; i++) {
 		if (!LIST_EMPTY(&ports[i])) {
 			ports[j] = ports[i];
 			ports[i] = (struct port_head){};
@@ -247,9 +247,10 @@ int main(int argc, char *argv[])
 	if (dp_ifindex < 0)
 		exit(1);
 
+#ifdef NDEBUG
 	if (timer_interval > 0)
 		timer(timer_handler, timer_interval);
-
+#endif
 	status = odp_loop(dp_cast(&odp.dp), &parser);
 	odp_free(&odp);
 	return status;

@@ -30,6 +30,8 @@ struct port {
 	__u32			 port_type;
 	union {
 		struct {
+			char	*src_ipv4;
+			char	*dst_ipv4;
 			__u16	 dst_port;
 		} tun;
 		struct {
@@ -38,10 +40,6 @@ struct port {
 			int	 ifindex;
 		} link;
 	} opt;
-	struct {
-		__be32		 dst_ipv4;
-		__be32		 src_ipv4;
-	} key;
 
 	LIST_ENTRY(port)	 next;
 };

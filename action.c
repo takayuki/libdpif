@@ -15,6 +15,7 @@
  */
 #include "action.h"
 #include "nla.h"
+#include "utils.h"
 
 static int
 key_parse_member(struct buffer *buf, struct key *key, struct nlattr *nla,
@@ -109,9 +110,9 @@ int action_output_tunnel(struct buffer *buf, struct port_head *ports)
 	LIST_FOREACH(port, ports, next) {
 		nla_nest_begin(buf, &nest[0],OVS_ACTION_ATTR_SET);
 		nla_nest_begin(buf, &nest[1], OVS_KEY_ATTR_TUNNEL);
-		nla_put_be32(buf, port->key.src_ipv4,
+		nla_put_be32(buf, ip4_addr(port->opt.tun.src_ipv4),
 			     OVS_TUNNEL_KEY_ATTR_IPV4_SRC);
-		nla_put_be32(buf, port->key.dst_ipv4,
+		nla_put_be32(buf, ip4_addr(port->opt.tun.dst_ipv4),
 			     OVS_TUNNEL_KEY_ATTR_IPV4_DST);
 		nla_put_u8(buf, 64, OVS_TUNNEL_KEY_ATTR_TTL);
 		nla_nest_end(buf, nest[1]);

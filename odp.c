@@ -139,15 +139,16 @@ tunnel_port(struct odp *odp, int dp_ifindex, struct port_head *ports)
 	case OVS_VPORT_TYPE_GRE:
 		req.vport_name = "GRE";
 		break;
-	case OVS_VPORT_TYPE_VXLAN:
-		req.vport_name = "VXLAN";
-		break;
 	case OVS_VPORT_TYPE_GRE64:
 		req.vport_name = "GRE64";
 		break;
 	case OVS_VPORT_TYPE_LISP:
 		req.opt.tun.dst_port = port->opt.tun.dst_port;
 		req.vport_name = "LISP";
+		break;
+	case OVS_VPORT_TYPE_VXLAN:
+		req.opt.tun.dst_port = port->opt.tun.dst_port;
+		req.vport_name = "VXLAN";
 		break;
 	default:
 		req.vport_name = "unknown";
@@ -273,7 +274,7 @@ int odp_new(struct odp *odp, struct port_head *ports, int use_mmap)
 
 	dp = &odp->dp;
 
-	for (i = 0; i < OVS_VPORT_TYPE_MAX; i++) {
+	for (i = 0; i < __OVS_VPORT_TYPE_MAX; i++) {
 
 		if (LIST_EMPTY(&ports[i]))
 			return -1;
@@ -301,7 +302,7 @@ int odp_new(struct odp *odp, struct port_head *ports, int use_mmap)
 
 	dp_ifindex = dp->ovs.ovsh->dp_ifindex;
 
-	for (i = 0; i < OVS_VPORT_TYPE_MAX; i++) {
+	for (i = 0; i < __OVS_VPORT_TYPE_MAX; i++) {
 		if (LIST_EMPTY(&ports[i]))
 			break;
 
@@ -321,6 +322,7 @@ int odp_new(struct odp *odp, struct port_head *ports, int use_mmap)
 		case OVS_VPORT_TYPE_GRE:
 		case OVS_VPORT_TYPE_GRE64:
 		case OVS_VPORT_TYPE_LISP:
+		case OVS_VPORT_TYPE_VXLAN:
 			if (tunnel_port(odp, dp_ifindex, &ports[i]) < 0)
 				goto err;
 			break;
@@ -329,20 +331,34 @@ int odp_new(struct odp *odp, struct port_head *ports, int use_mmap)
 		}
 	}
 
-	for (i = 0; i < OVS_VPORT_TYPE_MAX; i++) {
+	for (i = 0; i < __OVS_VPORT_TYPE_MAX; i++) {
 		if (LIST_EMPTY(&ports[i]))
 			break;
 
 		LIST_FOREACH(port, &ports[i], next) {
-			if (port->opt.link.ifindex)
-				info("port #%u: %s, ifindex=%d, addr=%s,%s\n",
+			if (port->port_type == OVS_VPORT_TYPE_INTERNAL)
+				info("Port %u: %s,addr=%s,mac=%s\n",
 				     port->port_no,
 				     port->port_name,
-				     port->opt.link.ifindex,
 				     port->opt.link.addr,
 				     port->opt.link.mac);
+			else if(port->port_type == OVS_VPORT_TYPE_GRE ||
+				port->port_type == OVS_VPORT_TYPE_GRE64)
+				info("Port %d: %s,src=%s,dst=%s\n",
+				     port->port_no,
+				     port->port_name,
+				     port->opt.tun.src_ipv4,
+				     port->opt.tun.dst_ipv4);
+			else if(port->port_type == OVS_VPORT_TYPE_LISP ||
+				port->port_type == OVS_VPORT_TYPE_VXLAN)
+				info("Port %d: %s,src=%s,dst=%s,port=%u\n",
+				     port->port_no,
+				     port->port_name,
+				     port->opt.tun.src_ipv4,
+				     port->opt.tun.dst_ipv4,
+				     port->opt.tun.dst_port);
 			else
-				info("port #%d: %s\n",
+				info("Port %d: %s\n",
 				     port->port_no,
 				     port->port_name);
 

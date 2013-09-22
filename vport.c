@@ -162,7 +162,8 @@ static int cmd_new(struct buffer *buf, void *arg)
 	ovs_put_header(buf, &ovsh);
 	nla_put_str(buf, req->vport_name, OVS_VPORT_ATTR_NAME);
 	nla_put_u32(buf, req->vport_type, OVS_VPORT_ATTR_TYPE);
-	if (req->vport_type == OVS_VPORT_TYPE_LISP) {
+	if (req->vport_type == OVS_VPORT_TYPE_LISP ||
+	    req->vport_type == OVS_VPORT_TYPE_VXLAN) {
 		nla_nest_begin(buf, &nest[0], OVS_VPORT_ATTR_OPTIONS);
 		nla_put_u16(buf, req->opt.tun.dst_port,
 			    OVS_TUNNEL_ATTR_DST_PORT);
