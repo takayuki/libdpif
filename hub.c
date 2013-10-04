@@ -98,7 +98,7 @@ static int flood(struct nl *nl, struct buffer *buf, void *arg,
 			.ports = ports,
 		};
 
-		if (flow_run(flow, &req, flow_flood) < 0)
+		if (flow_exec(flow, &req, flow_flood) < 0)
 			goto err;
 	}
 	return 0;
