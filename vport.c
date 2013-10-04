@@ -101,6 +101,12 @@ int vport_parse(struct nl *nl, struct buffer *buf, void *arg,
 			ret = nla_get_data(buf, nla,
 					   (void**)&vport->vport_stats);
 			break;
+		case OVS_VPORT_ATTR_IPV4_REASM:
+			ret = nla_discard(buf, nla);
+			break;
+		case OVS_VPORT_ATTR_IPV4_PMTUD:
+			ret = nla_discard(buf, nla);
+			break;
 		default:
 			ret = nla_discard(buf, nla);
 		}
@@ -170,8 +176,11 @@ static int cmd_new(struct buffer *buf, void *arg)
 		nla_nest_end(buf, nest[0]);
 	}
 	nla_put_u32(buf, req->vport_upcall_pid, OVS_VPORT_ATTR_UPCALL_PID);
+	nla_put_empty(buf, OVS_VPORT_ATTR_IPV4_REASM);
+	if (req->vport_type == OVS_VPORT_TYPE_NETDEV ||
+	    req->vport_type == OVS_VPORT_TYPE_INTERNAL)
+		nla_put_empty(buf, OVS_VPORT_ATTR_IPV4_PMTUD);
 	return 0;
-
 }
 _VPORT_BUILDER(cmd_new, NLM_F_ECHO, OVS_VPORT_CMD_NEW)
 
