@@ -22,7 +22,8 @@
 
 struct key {
 	__u32			 key_in_port;
-	struct ovs_key_ethernet *key_ethernet;
+	__u16			 key_frag_max_size;
+	struct ovs_key_ethernet	*key_ethernet;
 	__be16			 key_vlan;
 	__be16			 key_ethertype;
 	struct ovs_key_ipv4	*key_ipv4;

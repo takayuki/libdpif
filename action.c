@@ -29,6 +29,8 @@ key_parse_member(struct buffer *buf, struct key *key, struct nlattr *nla,
 		return nla_discard(buf, nla);
 	case OVS_KEY_ATTR_IN_PORT:
 		return nla_get_u32(buf, nla, &key->key_in_port);
+	case OVS_KEY_ATTR_FRAG_MAX_SIZE:
+		return nla_get_u16(buf, nla, &key->key_frag_max_size);
 	case OVS_KEY_ATTR_ETHERNET:
 		return nla_get_data(buf, nla, (void**)&key->key_ethernet);
 	case OVS_KEY_ATTR_VLAN:
