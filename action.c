@@ -13,13 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <endian.h>
 #include "action.h"
 #include "nla.h"
 #include "utils.h"
 
 static int
-key_parse_member(struct buffer *buf, struct key *key, struct nlattr *nla,
-		 int level)
+key_parse_tunnel_attr(struct buffer *buf, struct key *key, struct nlattr *nla,
+		      int level)
+{
+	int ret = 0;
+
+	while (!nla_parse(buf, &nla, level)) {
+		switch (nla->nla_type) {
+		case OVS_TUNNEL_KEY_ATTR_ID:
+			ret = nla_get_be64(buf, nla, &key->tun_key.id);
+		default:
+			ret = nla_discard(buf, nla);
+		}
+	}
+	return ret;
+}
+
+static int
+key_parse_attr(struct buffer *buf, struct key *key, struct nlattr *nla,
+	       int level)
 {
 	struct buffer slice;
 	int ret = 0;
@@ -57,7 +75,7 @@ key_parse_member(struct buffer *buf, struct key *key, struct nlattr *nla,
 		return nla_get_u32(buf, nla, &key->key_skb_mark);
 	case OVS_KEY_ATTR_TUNNEL:
 		nla_slice(buf, &slice, nla);
-		ret = key_parse(&slice, key, level + 1);
+		ret = key_parse_tunnel_attr(&slice, key, nla, level +1);
 		nla_slice_end(buf, &slice);
 		return ret;
 	default:
@@ -82,7 +100,7 @@ int key_parse(struct buffer *buf, struct key *key, int level)
 			nla_slice_end(buf, &slice);
 			break;
 		default:
-			ret = key_parse_member(buf, key, nla, level);
+			ret = key_parse_attr(buf, key, nla, level);
 		}
         }
 	return ret;
@@ -112,6 +130,8 @@ int action_output_tunnel(struct buffer *buf, struct port_head *ports)
 	LIST_FOREACH(port, ports, next) {
 		nla_nest_begin(buf, &nest[0],OVS_ACTION_ATTR_SET);
 		nla_nest_begin(buf, &nest[1], OVS_KEY_ATTR_TUNNEL);
+		nla_put_be64(buf, htobe64(port->opt.tun.id),
+			     OVS_TUNNEL_KEY_ATTR_ID);
 		nla_put_be32(buf, ip4_addr(port->opt.tun.src_ipv4),
 			     OVS_TUNNEL_KEY_ATTR_IPV4_SRC);
 		nla_put_be32(buf, ip4_addr(port->opt.tun.dst_ipv4),

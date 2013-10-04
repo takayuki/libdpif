@@ -344,16 +344,18 @@ int odp_new(struct odp *odp, struct port_head *ports, int use_mmap)
 				     port->opt.link.mac);
 			else if(port->port_type == OVS_VPORT_TYPE_GRE ||
 				port->port_type == OVS_VPORT_TYPE_GRE64)
-				info("Port %d: %s,src=%s,dst=%s\n",
+				info("Port %d: %s,id=%lu,src=%s,dst=%s\n",
 				     port->port_no,
 				     port->port_name,
+				     port->opt.tun.id,
 				     port->opt.tun.src_ipv4,
 				     port->opt.tun.dst_ipv4);
 			else if(port->port_type == OVS_VPORT_TYPE_LISP ||
 				port->port_type == OVS_VPORT_TYPE_VXLAN)
-				info("Port %d: %s,src=%s,dst=%s,port=%u\n",
+				info("Port %d: %s,id=%lu,src=%s,dst=%s,port=%u\n",
 				     port->port_no,
 				     port->port_name,
+				     port->opt.tun.id,
 				     port->opt.tun.src_ipv4,
 				     port->opt.tun.dst_ipv4,
 				     port->opt.tun.dst_port);

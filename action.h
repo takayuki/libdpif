@@ -34,6 +34,9 @@ struct key {
 	struct ovs_key_icmpv6	*key_icmpv6;
 	struct ovs_key_arp	*key_arp;
 	__u32			 key_skb_mark;
+	struct {
+		__be64 id;
+	} tun_key;
 };
 
 int key_parse(struct buffer *, struct key *, int);

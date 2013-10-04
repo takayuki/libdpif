@@ -155,15 +155,17 @@ static int flood(struct buffer *buf, void *arg)
 
 		LIST_FOREACH(out, &req->ports[i], next) {
 
-			if (out->port_no == in_port)
-				continue;
-
 			if (out->port_type == OVS_VPORT_TYPE_GRE ||
 			    out->port_type == OVS_VPORT_TYPE_GRE64 ||
 			    out->port_type == OVS_VPORT_TYPE_VXLAN ||
 			    out->port_type == OVS_VPORT_TYPE_LISP) {
+				if (out->port_no == in_port && out->opt.tun.id == be64toh(p->key.tun_key.id))
+					continue;
 				action_output_tunnel(buf, &req->ports[i]);
 				break;
+			} else {
+				if (out->port_no == in_port)
+					continue;
 			}
 
 			action_output(buf, out->port_no);

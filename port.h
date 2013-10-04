@@ -30,6 +30,7 @@ struct port {
 	__u32			 port_type;
 	union {
 		struct {
+			__u64    id;
 			char	*src_ipv4;
 			char	*dst_ipv4;
 			__u16	 dst_port;

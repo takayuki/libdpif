@@ -44,6 +44,10 @@ static int parse_pair(struct port *port, char *key, char *value)
 		if (value == 0 || *value == 0)
 			return -1;
 		port->opt.tun.dst_ipv4 = value;
+	} else if (!strcmp(key,"id")) {
+		if (value == 0 || *value == 0)
+			return -1;
+		port->opt.tun.id = atol(value);
 	} else if (!strcmp(key,"port")) {
 		if (value == 0 || *value == 0)
 			return -1;
