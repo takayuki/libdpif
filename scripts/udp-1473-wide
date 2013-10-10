@@ -1,0 +1,10 @@
+#! /bin/bash
+
+id=$RANDOM
+hw=${1:-02:00:00:00:00:02}
+ip=${2:-172.16.0.2}
+sum=$((${3:-0x9c26}))
+df=${4-df,}
+
+mz eth0 -b $hw -B $ip -t 'udp' "${df}mf,proto=17,id=$id,sp=9,dp=9,iplen=1500,len=1481,sum=$sum" -F zero-1472 -c 1
+mz eth0 -b $hw -B $ip -t 'ip' "${df}frag=185,proto=17,id=$id,len=21" -F zero-0001 -c 1

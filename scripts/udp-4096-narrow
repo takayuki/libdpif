@@ -1,0 +1,16 @@
+#! /bin/bash
+
+id=$RANDOM
+hw=${1:-02:00:00:00:00:01}
+ip=${2:-172.16.0.2}
+sum=$((${3:-0x87a8}))
+df=${4-df,}
+
+mz eth0 -b $hw -B $ip -t 'udp' "${df}mf,proto=17,id=$id,sp=9,dp=9,iplen=572,len=4104,sum=$sum" -F zero-0544 -c 1
+mz eth0 -b $hw -B $ip -t 'ip' "${df}mf,frag=69,proto=17,id=$id,len=572" -F zero-0552 -c 1
+mz eth0 -b $hw -B $ip -t 'ip' "${df}mf,frag=138,proto=17,id=$id,len=572" -F zero-0552 -c 1
+mz eth0 -b $hw -B $ip -t 'ip' "${df}mf,frag=207,proto=17,id=$id,len=572" -F zero-0552 -c 1
+mz eth0 -b $hw -B $ip -t 'ip' "${df}mf,frag=276,proto=17,id=$id,len=572" -F zero-0552 -c 1
+mz eth0 -b $hw -B $ip -t 'ip' "${df}mf,frag=345,proto=17,id=$id,len=572" -F zero-0552 -c 1
+mz eth0 -b $hw -B $ip -t 'ip' "${df}mf,frag=414,proto=17,id=$id,len=572" -F zero-0552 -c 1
+mz eth0 -b $hw -B $ip -t 'ip' "${df}frag=483,proto=17,id=$id,len=260" -F zero-0240 -c 1

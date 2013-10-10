@@ -1,0 +1,16 @@
+#! /bin/sh
+
+# sudo ip netns e ns1 ./hub -F3 -M -d dp0,addr=172.16.0.240/24,mac=02:00:00:00:01:00 -n veth0 -g tun0,src=10.0.0.1,dst=10.0.0.3 -v
+# sudo ip netns e ns3 ./hub -F3 -M -d dp0,addr=172.16.0.242/24,mac=02:00:00:00:01:02 -n veth0 -g tun0,src=10.0.0.3,dst=10.0.0.1 -v
+
+# sudo ip netns e ns1 ./hub -F2 -M -d dp0,addr=172.16.0.240/24,mac=02:00:00:00:01:00 -n veth0 -V tun0,src=10.0.0.1,dst=10.0.0.3,port=4000 -v
+# sudo ip netns e ns3 ./hub -F2 -M -d dp0,addr=172.16.0.242/24,mac=02:00:00:00:01:02 -n veth0 -V tun0,src=10.0.0.3,dst=10.0.0.1,port=4000 -v
+
+sudo ip netns e ns1.1 ./udp-545-narrow 02:00:00:00:00:03 172.16.2.1 0xa15f
+sudo ip netns e ns1.1 ./udp-545-narrow 02:00:00:00:00:03 172.16.2.1 0xa15f ""
+sudo ip netns e ns1.1 ./udp-1473-wide 02:00:00:00:00:03 172.16.2.1 0x9a27
+sudo ip netns e ns1.1 ./udp-1473-wide 02:00:00:00:00:03 172.16.2.1 0x9a27 ""
+sudo ip netns e ns1.1 ./udp-4096-narrow 02:00:00:00:00:03 172.16.2.1 0x85a9
+sudo ip netns e ns1.1 ./udp-4096-narrow 02:00:00:00:00:03 172.16.2.1 0x85a9 ""
+sudo ip netns e ns1.1 ./udp-4096-wide 02:00:00:00:00:03 172.16.2.1 0x85a9
+sudo ip netns e ns1.1 ./udp-4096-wide 02:00:00:00:00:03 172.16.2.1 0x85a9 ""

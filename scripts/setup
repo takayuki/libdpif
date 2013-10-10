@@ -1,0 +1,126 @@
+#!/bin/sh
+
+clean() {
+    ip link set dev br0 down
+    brctl delif br0 veth1
+    brctl delif br0 veth2
+    brctl delif br0 veth3
+    for ns in $(ip netns); do
+        ip netns del $ns;
+    done
+    brctl delbr br0
+}
+
+clean 2> /dev/null
+
+ip netns add ns1
+ip netns add ns1.1
+ip netns add ns1.2
+ip netns add ns1.3
+ip netns add ns2
+ip netns add ns2.1
+ip netns add ns2.2
+ip netns add ns3
+ip netns add ns3.1
+ip netns add ns3.2
+ip netns add ns3.3
+brctl addbr br0
+ip link set dev br0 up
+
+for i in 1 2 3; do
+    ip link add veth$i mtu 1500 type veth peer name veth$i.1 mtu 1500
+    ip link set dev veth$i.1 up netns ns$i name eth0
+    brctl addif br0 veth$i
+    ip link set dev veth$i up
+    ip netns exec ns$i ip addr add 10.0.0.$i/24 dev eth0
+    ip netns exec ns$i ip link set dev lo up
+    ip netns exec ns$i ip link set dev eth0 up
+done
+
+
+ip netns exec ns1 ip link add veth0 mtu 1500 type veth peer name veth0.1 mtu 1500
+ip netns exec ns1 ip link set dev veth0 up
+ip netns exec ns1 ip link set dev veth0.1 up netns ns1.1 name eth0
+ip netns exec ns1.1 ip addr add 172.16.0.1/24 dev eth0
+ip netns exec ns1.1 ip link set dev lo up
+ip netns exec ns1.1 ip link set dev eth0 address 02:00:00:00:00:01
+ip netns exec ns1.1 ip link set dev eth0 up
+ip netns exec ns1.1 ip route add 0.0.0.0/0 via 172.16.0.3
+
+ip netns exec ns2 ip link add veth0 mtu 576 type veth peer name veth1 mtu 576
+ip netns exec ns2 ip link set dev veth0 up
+ip netns exec ns2 ip link set dev veth1 up netns ns2.1 name eth0
+ip netns exec ns2.1 ip addr add 172.16.0.2/24 dev eth0
+ip netns exec ns2.1 ip link set dev lo up
+ip netns exec ns2.1 ip link set dev eth0 address 02:00:00:00:00:02
+ip netns exec ns2.1 ip link set dev eth0 up
+ip netns exec ns2.1 ip route add 0.0.0.0/0 via 172.16.0.3
+
+ip netns exec ns3 ip link add veth0 type veth peer name veth1
+ip netns exec ns3 ip link set dev veth0 up
+ip netns exec ns3 ip link set dev veth1 up netns ns3.1 name eth0
+ip netns exec ns3.1 ip addr add 172.16.0.3/24 dev eth0
+ip netns exec ns3.1 ip link set dev lo up
+ip netns exec ns3.1 ip link set dev eth0 address 02:00:00:00:00:03
+ip netns exec ns3.1 ip link set dev eth0 up
+
+# external
+ip netns exec ns3.1 ip link add eth1 mtu 576 type veth peer name eth1.1 mtu 576
+ip netns exec ns3.1 ip addr add 172.16.1.2/24 dev eth1
+ip netns exec ns3.1 ip link set dev eth1 address 02:00:00:00:01:02
+ip netns exec ns3.1 ip link set dev eth1 up
+ip netns exec ns3.1 ip link set dev eth1.1 up netns ns3.2 name eth0
+ip netns exec ns3.1 sh -c 'echo 1 >/proc/sys/net/ipv4/ip_forward'
+ip netns exec ns3.1 ip route add 172.16.2.0/24 via 172.16.1.1
+
+ip netns exec ns3.2 ip addr add 172.16.1.1/24 dev eth0
+ip netns exec ns3.2 ip link set dev lo up
+ip netns exec ns3.2 ip link set dev eth0 address 02:00:00:00:01:01
+ip netns exec ns3.2 ip link set dev eth0 up
+ip netns exec ns3.2 ip route add 172.16.0.0/24 via 172.16.1.2
+
+ip netns exec ns3.2 ip link add eth1 type veth peer name eth1.1
+ip netns exec ns3.2 ip addr add 172.16.2.2/24 dev eth1
+ip netns exec ns3.2 ip link set dev eth1 address 02:00:00:00:02:02
+ip netns exec ns3.2 ip link set dev eth1 up
+ip netns exec ns3.2 ip link set dev eth1.1 up netns ns3.3 name eth0
+ip netns exec ns3.2 sh -c 'echo 1 >/proc/sys/net/ipv4/ip_forward'
+
+ip netns exec ns3.3 ip addr add 172.16.2.1/24 dev eth0
+ip netns exec ns3.3 ip link set dev lo up
+ip netns exec ns3.3 ip link set dev eth0 address 02:00:00:00:02:01
+ip netns exec ns3.3 ip link set dev eth0 up
+ip netns exec ns3.3 ip route add 172.16.0.0/24 via 172.16.2.2
+ip netns exec ns3.3 ip route add 172.16.1.0/24 via 172.16.2.2
+
+
+# vlan
+ip netns exec ns1 ip link add veth1 type veth peer name veth1.1
+ip netns exec ns1 ip link set dev veth1 up
+ip netns exec ns1 ip link set dev veth1.1 up netns ns1.2 name eth0
+ip netns exec ns1.2 ip link add link eth0 name eth0.100 type vlan id 100
+ip netns exec ns1.2 ip addr add 172.16.0.1/24 dev eth0.100
+ip netns exec ns1.2 ip link set dev lo up
+ip netns exec ns1.2 ip link set dev eth0 address 02:00:00:01:00:01
+ip netns exec ns1.2 ip link set dev eth0.100 address 02:00:00:01:00:01
+ip netns exec ns1.2 ip link set dev eth0.100 up
+
+ip netns exec ns1 ip link add veth2 type veth peer name veth2.1
+ip netns exec ns1 ip link set dev veth2 up
+ip netns exec ns1 ip link set dev veth2.1 up netns ns1.3 name eth0
+ip netns exec ns1.3 ip link add link eth0 name eth0.100 type vlan id 100
+ip netns exec ns1.3 ip addr add 172.16.0.2/24 dev eth0.100
+ip netns exec ns1.3 ip link set dev lo up
+ip netns exec ns1.3 ip link set dev eth0 address 02:00:00:01:00:02
+ip netns exec ns1.3 ip link set dev eth0.100 address 02:00:00:01:00:02
+ip netns exec ns1.3 ip link set dev eth0.100 up
+
+ip netns exec ns2 ip link add veth1 mtu 576 type veth peer name veth1.1 mtu 576
+ip netns exec ns2 ip link set dev veth1 up
+ip netns exec ns2 ip link set dev veth1.1 up netns ns2.2 name eth0
+ip netns exec ns2.2 ip link add link eth0 name eth0.100 type vlan id 100
+ip netns exec ns2.2 ip addr add 172.16.0.3/24 dev eth0.100
+ip netns exec ns2.2 ip link set dev lo up
+ip netns exec ns2.2 ip link set dev eth0 address 02:00:00:01:00:03
+ip netns exec ns2.2 ip link set dev eth0.100 address 02:00:00:01:00:03
+ip netns exec ns2.2 ip link set dev eth0.100 up
