@@ -72,6 +72,12 @@ int dp_parse(struct nl *nl, struct buffer *buf, void *arg,
 		case OVS_DP_ATTR_STATS:
 			ret = nla_get_data(buf, nla, (void**)&dp->dp_stats);
 			break;
+		case OVS_DP_ATTR_IPV4_REASM:
+			ret = nla_discard(buf, nla);
+			break;
+		case OVS_DP_ATTR_IPV4_PMTUD:
+			ret = nla_discard(buf, nla);
+			break;
 		default:
 			ret = nla_discard(buf, nla);
 		}
@@ -130,6 +136,8 @@ static int cmd_new(struct buffer *buf, void *arg)
 	ovs_put_header(buf, &ovsh);
 	nla_put_str(buf, req->dp_name, OVS_DP_ATTR_NAME);
 	nla_put_u32(buf, req->dp_upcall_pid, OVS_DP_ATTR_UPCALL_PID);
+	nla_put_empty(buf, OVS_DP_ATTR_IPV4_REASM);
+	nla_put_empty(buf, OVS_DP_ATTR_IPV4_PMTUD);
 	return 0;
 }
 _DP_BUILDER(cmd_new, NLM_F_ACK, OVS_DP_CMD_NEW)
