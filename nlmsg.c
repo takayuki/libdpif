@@ -69,13 +69,18 @@ void nlmsg_slice_end(struct buffer *buf, struct buffer *slice)
 int nlmsg_parse(struct buffer* buf, struct nlmsghdr **nlhp)
 {
 	struct nlmsghdr *nlh;
+	int diff;
 
 	if (buffer_remaining(buf) < NLMSG_HDRLEN)
 		return -1;
 
 	nlh = *nlhp = (struct nlmsghdr*)buffer_data(buf);
-	if (buffer_remaining(buf) < NLMSG_ALIGN(nlh->nlmsg_len))
-		return -1;
+	if (buffer_remaining(buf) < NLMSG_ALIGN(nlh->nlmsg_len)) {
+		if (buffer_remaining(buf) < nlh->nlmsg_len)
+			return -1;
+		diff = NLMSG_ALIGN(nlh->nlmsg_len) - buffer_remaining(buf);
+		buffer_set_limit(buf, buffer_limit(buf) + diff);
+	}
 
 	trace("%snlmsg_len:%u,nlmsg_type:0x%x,nlmsg_flags:%u,nlmsg_seq:%u,nlmsg_pid:%u\n",
 	      buffer_note(buf),
