@@ -42,6 +42,8 @@ struct port {
 		} link;
 	} opt;
 
+	int			 noflood;
+
 	LIST_ENTRY(port)	 next;
 };
 

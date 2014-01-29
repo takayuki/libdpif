@@ -158,6 +158,9 @@ static int flood(struct buffer *buf, void *arg)
 
 		LIST_FOREACH(out, &req->ports[i], next) {
 
+			if (out->noflood)
+				continue;
+
 			if (out->port_type == OVS_VPORT_TYPE_GRE ||
 			    out->port_type == OVS_VPORT_TYPE_GRE64 ||
 			    out->port_type == OVS_VPORT_TYPE_VXLAN ||
@@ -180,3 +183,20 @@ static int flood(struct buffer *buf, void *arg)
 	return 0;
 }
 _FLOW_BUILDER(flood, NLM_F_ACK, OVS_FLOW_CMD_NEW)
+
+static int delete(struct buffer *buf, void *arg)
+{
+	struct flow_req *req = arg;
+	struct ovs_header ovsh = {
+		.dp_ifindex = req->dp_ifindex,
+	};
+	struct ovs_packet_family *p = &req->packet->ovs.family.packet;
+
+	ovs_put_header(buf, &ovsh);
+
+	nla_put_data(buf, p->packet_key.data, p->packet_key.len,
+		     OVS_FLOW_ATTR_KEY);
+
+	return 0;
+}
+_FLOW_BUILDER(delete, NLM_F_ACK, OVS_FLOW_CMD_DEL)

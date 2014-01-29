@@ -155,6 +155,9 @@ static int flood(struct buffer *buf, void *arg)
 
 		LIST_FOREACH(out, &req->ports[i], next) {
 
+			if (out->noflood)
+				continue;
+
 			if (out->port_type == OVS_VPORT_TYPE_GRE ||
 			    out->port_type == OVS_VPORT_TYPE_GRE64 ||
 			    out->port_type == OVS_VPORT_TYPE_VXLAN ||

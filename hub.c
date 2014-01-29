@@ -100,6 +100,9 @@ static int flood(struct nl *nl, struct buffer *buf, void *arg,
 
 		if (flow_exec(flow, &req, flow_flood) < 0)
 			goto err;
+		if (flood_mode >= 4)
+			if (flow_exec(flow, &req, flow_delete) < 0)
+				goto err;
 	}
 	return 0;
 err:

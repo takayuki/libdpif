@@ -44,5 +44,6 @@ int flow_exec(struct flow *, void *, flow_builder_t);
 int flow_##builder(struct flow *, struct buffer *, void *);
 
 _FLOW_BUILDER_DECL(flood)
+_FLOW_BUILDER_DECL(delete)
 
 #endif

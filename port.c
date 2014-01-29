@@ -52,6 +52,11 @@ static int parse_pair(struct port *port, char *key, char *value)
 		if (value == 0 || *value == 0)
 			return -1;
 		port->opt.tun.dst_port = atoi(value);
+	} else if (!strcmp(key,"noflood")) {
+		if (value == 0 || *value == 0)
+			port->noflood = 1;
+		else
+			port->noflood = atoi(value);
 	} else {
 		port->port_name = key;
 	}
